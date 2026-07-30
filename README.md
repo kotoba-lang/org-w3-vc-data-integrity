@@ -1,8 +1,34 @@
 # kotoba-lang/org-w3-vc-data-integrity
 
 **[W3C Data Integrity](https://www.w3.org/TR/vc-data-integrity/) proofs for
-Verifiable Credentials and Presentations, `eddsa-jcs-2022` cryptosuite
-([vc-di-eddsa](https://www.w3.org/TR/vc-di-eddsa/)), portable `.cljc`.**
+Verifiable Credentials and Presentations, portable `.cljc`.** Two cryptosuites:
+`eddsa-jcs-2022` ([vc-di-eddsa](https://www.w3.org/TR/vc-di-eddsa/), Ed25519) and
+`ecdsa-jcs-2019` ([vc-di-ecdsa](https://www.w3.org/TR/vc-di-ecdsa/), P-256).
+
+## Which cryptosuite
+
+`eddsa-jcs-2022` is the default. Pass `{:suite ecdsa/suite}` for P-256, which is
+what every WebAuthn credential uses and therefore what every `did:key:zDna…`
+subject is. Without it such a credential is not merely unsupported but
+**rejected**, which to its holder is indistinguishable from being forged.
+
+Two things `ecdsa-jcs-2019` gets right that are easy to get wrong:
+
+- **`proofValue` is IEEE P1363, not DER** — a bare `r ‖ s`, exactly 64 bytes for
+  P-256 (§3.3.1, RFC 4754 §7). The JVM's ordinary `SHA256withECDSA` emits a
+  variable-length DER SEQUENCE that nobody else would accept, so this uses
+  `SHA256withECDSAinP1363Format` and produces the raw form directly rather than
+  converting — a DER→P1363 conversion is one more place to be subtly wrong.
+- **A P-256 `did:key` carries a compressed point.** Recovering `y` is a single
+  `modPow` because P-256's `p ≡ 3 (mod 4)`; getting the sign convention backwards
+  yields a key that parses and verifies nothing, so the tests assert `y` and not
+  only `x`.
+
+**ECDSA signatures here are not reproducible.** §3 only *SHOULD*s determinism and
+the JVM provider is randomized, so unlike Ed25519 this suite cannot be pinned to a
+fixed `proofValue` — an external vector can only be *verified*. That is asserted
+rather than left as a surprise. The P-256 primitives are `:clj` only; `:cljs`
+raises a clear error rather than doing something else.
 
 `kotoba-lang/org-w3-vc` builds and shape-checks a credential but treats `proof`
 as an opaque pass-through field. This is what actually puts a signature in it.
