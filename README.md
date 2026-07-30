@@ -141,10 +141,28 @@ a byte-array on `:clj` and a **vector of ints** on `:cljs`. One normal form
 ## Test
 
 ```bash
-clojure -M:test          # release deps (git SHAs)
-clojure -M:dev:test      # sibling west checkouts
+clojure -M:test          # JVM, release deps (git SHAs)
+clojure -M:dev:test      # JVM, sibling west checkouts
 clojure -M:lint
+npm install && npm run smoke   # the :cljs branch
 ```
+
+The `:cljs` branch needs its own run, and CI runs both. Every dependency here has
+a reader-conditional split and two of them have already diverged silently:
+`jcs.core` refused a valid `1e20` on `:cljs` because `Number.isInteger` is not the
+analogue of `integer?`, and `multiformats.core/base64url-decode` returns a
+byte-array on `:clj` but a **vector of ints** on `:cljs`. A signature is over
+exact bytes, so a host that assembles them differently produces a credential the
+other host cannot verify — with nothing to say so.
+
+`test/nbb_smoke.cljs` therefore pins the *same* W3C Appendix B.3 vector the JVM
+suite pins, including reproducing the exact `proofValue`. Measured 2026-07-30:
+both hosts produce it byte for byte.
+
+`@noble/hashes` is a runtime dependency of the `:cljs` path only —
+`multiformats.core` reaches for it for SHA-256. It is declared in `package.json`
+because without it a fresh clone cannot run the smoke test; it previously
+appeared to work only because a sibling repo happened to have `node_modules`.
 
 ## License
 

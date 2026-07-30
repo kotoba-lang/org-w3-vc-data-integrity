@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "description": "npm dependency of the :cljs path only. multiformats.core reaches for @noble/hashes for SHA-256 on :cljs, so a fresh clone cannot run test/nbb_smoke.cljs without it — the cljs path previously appeared to work only because a sibling repo happened to have node_modules.",
+  "dependencies": {
+    "@noble/hashes": "2.0.1"
+  },
+  "scripts": {
+    "smoke": "nbb --classpath src:../org-ietf-jcs/src:../org-ietf-ed25519/src:../org-w3-did/src:../io-multiformats/src test/nbb_smoke.cljs"
+  }
+}

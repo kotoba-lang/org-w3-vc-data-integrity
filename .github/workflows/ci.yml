@@ -20,3 +20,13 @@ jobs:
       - run: clojure -M:test
 
       - run: clojure -M:lint
+
+      # The :cljs branch is not covered by the JVM suite, and every dependency
+      # here has a reader-conditional split that has already diverged silently
+      # once. Without this step the portability claim in the README is untested.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      - run: npm install -g nbb
+      - run: npm run smoke

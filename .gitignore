@@ -2,3 +2,5 @@
 .nrepl-port
 target/
 tmp/
+node_modules/
+package-lock.json
