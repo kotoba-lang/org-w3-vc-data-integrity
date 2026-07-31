@@ -161,13 +161,18 @@
            (str "cryptosuite must be " cryptosuite-name)
            {:got (get proof-options "cryptosuite")})))
 
-(defn transform [unsecured-document proof-options]
-  (assert-suite! proof-options)
-  (jcs/canonicalize-bytes unsecured-document))
+(defn transform
+  ;; the opts-ignoring arity lets core/issue call every suite identically
+  ([unsecured-document proof-options] (transform unsecured-document proof-options nil))
+  ([unsecured-document proof-options _opts]
+   (assert-suite! proof-options)
+   (jcs/canonicalize-bytes unsecured-document)))
 
-(defn proof-configuration [proof-options]
-  (assert-suite! proof-options)
-  (jcs/canonicalize-bytes proof-options))
+(defn proof-configuration
+  ([proof-options] (proof-configuration proof-options nil))
+  ([proof-options _opts]
+   (assert-suite! proof-options)
+   (jcs/canonicalize-bytes proof-options)))
 
 (defn hash-data
   "§3.3.4. proofConfigHash FIRST, then transformedDocumentHash — the same order

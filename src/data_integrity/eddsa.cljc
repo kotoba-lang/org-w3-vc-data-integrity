@@ -39,8 +39,12 @@
    UTF-8 bytes. RFC 8785 defines the canonical form as UTF-8, so canonicalizing
    straight to bytes is the same value the spec's string-then-encode wording
    produces, without a redundant round trip."
-  [proof-options]
-  (when-not (= proof-type (get proof-options "type"))
+  ([proof-options] (proof-configuration proof-options nil))
+  ([proof-options _opts]
+   ;; The 2-arity exists so `core/issue` can call every suite the same way. JCS
+   ;; needs no options; `eddsa-rdfc-2022` needs pinned `:contexts`, and branching on
+   ;; the suite at the call site is how one of them ends up silently unreachable.
+   (when-not (= proof-type (get proof-options "type"))
     (fail! :data-integrity/bad-proof-type
            (str "proof type must be " proof-type)
            {:got (get proof-options "type")}))
@@ -53,7 +57,7 @@
       (fail! :data-integrity/bad-created
              "proof `created` is not a valid XSD dateTime"
              {:created created})))
-  (jcs/canonicalize-bytes proof-options))
+   (jcs/canonicalize-bytes proof-options)))
 
 ;; ── §3.3.3 Transformation ────────────────────────────────────────────────────
 (defn transform
@@ -67,8 +71,9 @@
    `proof-configuration`'s checks, repeated here) as the strict reading; being
    stricter than a spec typo cannot make an otherwise-valid proof fail, because
    any proof this rejects would be rejected by §3.3.5 one step later anyway."
-  [unsecured-document proof-options]
-  (when-not (= proof-type (get proof-options "type"))
+  ([unsecured-document proof-options] (transform unsecured-document proof-options nil))
+  ([unsecured-document proof-options _opts]
+   (when-not (= proof-type (get proof-options "type"))
     (fail! :data-integrity/bad-proof-type
            (str "proof type must be " proof-type)
            {:got (get proof-options "type")}))
@@ -76,7 +81,7 @@
     (fail! :data-integrity/bad-cryptosuite
            (str "cryptosuite must be " cryptosuite-name)
            {:got (get proof-options "cryptosuite")}))
-  (jcs/canonicalize-bytes unsecured-document))
+   (jcs/canonicalize-bytes unsecured-document)))
 
 ;; ── §3.3.4 Hashing ───────────────────────────────────────────────────────────
 (defn hash-data

@@ -149,13 +149,18 @@
                            signer, so key material need never enter this library
    Optional:
      :expires :domain :challenge :suite
+     :suite-opts           extra input the suite needs. `eddsa-rdfc-2022` requires
+                           `{:contexts {url => context}}`, because it canonicalizes
+                           RDF and never fetches a remote `@context` — a fetched one
+                           lets its host change what a signature covers. Ignored by
+                           the JCS suites.
 
    `:created` is NOT defaulted from a clock. This library takes no ambient
    authority — the same discipline `kotoba-lang/ao` follows by requiring `now-ms`
    from its caller — so the timestamp that ends up inside a signature is always
    one the caller chose and can reproduce."
-  [unsecured-document {:keys [suite seed sign verification-method proof-purpose
-                              created expires domain challenge]
+  [unsecured-document {:keys [suite suite-opts seed sign verification-method
+                              proof-purpose created expires domain challenge]
                        :or {suite eddsa/suite}}]
   (let [doc (stringify unsecured-document)]
     (when-not (map? doc)
@@ -194,9 +199,13 @@
                   (assoc proof "@context" ctx)
                   proof)
           ;; step 3
-          proof-config ((:proof-configuration suite) proof)
+          ;; Every suite is called with the SAME arity. A suite that needs input
+          ;; the caller must supply -- `eddsa-rdfc-2022` needs pinned `:contexts`
+          ;; -- was otherwise unreachable through this function, which is how a
+          ;; correct cryptosuite ends up with no way to use it.
+          proof-config ((:proof-configuration suite) proof suite-opts)
           ;; step 4 — the document as given, with no proof in it
-          transformed ((:transform suite) doc proof)
+          transformed ((:transform suite) doc proof suite-opts)
           ;; step 5
           hash-bytes ((:hash suite) transformed proof-config)
           ;; step 6
@@ -242,7 +251,8 @@
      :resolve-key             (fn [verification-method] -> 32 public key bytes),
                               required for any DID method other than did:key
      :suite"
-  [secured-document {:keys [suite expected-proof-purpose challenge domain resolve-key]
+  [secured-document {:keys [suite suite-opts expected-proof-purpose challenge domain
+                            resolve-key]
                      :or {suite eddsa/suite resolve-key default-resolve-key}}]
   (let [doc (stringify secured-document)]
     (when-not (map? doc)
@@ -302,8 +312,8 @@
                                 (assoc unsecured "@context" (get proof-options "@context"))
                                 unsecured)
                     sig ((:decode-proof-value suite) (get proof "proofValue"))
-                    transformed ((:transform suite) unsecured proof-options)
-                    proof-config ((:proof-configuration suite) proof-options)
+                    transformed ((:transform suite) unsecured proof-options suite-opts)
+                    proof-config ((:proof-configuration suite) proof-options suite-opts)
                     hash-bytes ((:hash suite) transformed proof-config)
                     pub (resolve-key vm)
                     ok ((:verify suite) pub hash-bytes sig)]
