@@ -35,7 +35,9 @@
               https://www.w3.org/TR/vc-di-eddsa/ §3.3.1, §3.3.2"
   (:require [clojure.string :as str]
             [data-integrity.bytes :as b]
+            [data-integrity.ecdsa :as ecdsa]
             [data-integrity.eddsa :as eddsa]
+            [data-integrity.eddsa-rdfc :as eddsa-rdfc]
             [did.core :as did]
             [ed25519.core :as ed]))
 
@@ -233,6 +235,16 @@
   [a b]
   (= (set (or (context-vec a) [])) (set (or (context-vec b) []))))
 
+(def built-in-suites
+  "The suites this library ships, keyed by the `cryptosuite` string a proof declares.
+
+   Provided so a caller can build an `:accept-suites` allowlist by name instead of
+   importing each namespace, NOT as a default. See `verify`: there is deliberately
+   no mode that accepts whatever a proof names."
+  {(:cryptosuite eddsa/suite) eddsa/suite
+   (:cryptosuite ecdsa/suite) ecdsa/suite
+   (:cryptosuite eddsa-rdfc/suite) eddsa-rdfc/suite})
+
 (defn verify
   "Verify the Data Integrity proof on `secured-document`.
 
@@ -250,10 +262,35 @@
      :challenge :domain       enforced when given
      :resolve-key             (fn [verification-method] -> 32 public key bytes),
                               required for any DID method other than did:key
-     :suite"
-  [secured-document {:keys [suite suite-opts expected-proof-purpose challenge domain
-                            resolve-key]
-                     :or {suite eddsa/suite resolve-key default-resolve-key}}]
+     :suite                   verify against exactly this suite; a proof naming a
+                              different `cryptosuite` is MALFORMED and throws
+     :accept-suites           an ALLOWLIST — a map of cryptosuite-name -> suite, or
+                              a collection of suites — from which the suite named by
+                              the proof is selected. A proof naming anything else is
+                              `{:verified false :reason :unacceptable-cryptosuite}`.
+
+   With neither option the default is `eddsa-jcs-2022`, unchanged — that default
+   predates this dispatch and removing it would break every existing caller. A
+   compatibility default is a different thing from letting a proof pick its own
+   verifier.
+
+   ## Why `:accept-suites` is an allowlist and not \"whatever the proof says\"
+
+   `cryptosuite` is a field of the proof, so it is chosen by whoever produced the
+   document — including an attacker. Selecting a suite from it unconditionally would
+   let them pick the weakest one a verifier happens to support, which is a downgrade
+   attack with no signature forgery required. So dispatch happens only against an
+   explicit allowlist, and the empty allowlist accepts nothing.
+
+   The allowlist also makes migration possible at all. `:suite` alone cannot verify a
+   corpus containing more than one cryptosuite — a mixed corpus is exactly what any
+   change of suite produces — because a mismatch throws rather than being skipped.
+
+   `:suite-opts` applies to whichever suite is selected, so a rdfc suite still needs
+   its pinned `:contexts`."
+  [secured-document {:keys [suite suite-opts accept-suites expected-proof-purpose
+                            challenge domain resolve-key]
+                     :or {resolve-key default-resolve-key}}]
   (let [doc (stringify secured-document)]
     (when-not (map? doc)
       (fail! :data-integrity/bad-document "document must be a map" {}))
@@ -271,7 +308,33 @@
                "proof sets/chains are not implemented" {}))
       ;; §3.3.2 steps 1-2
       (let [unsecured (dissoc doc "proof")
-            proof-options (dissoc proof "proofValue")]
+            proof-options (dissoc proof "proofValue")
+            ;; Resolve which suite verifies THIS proof. With :suite the caller has
+            ;; named one and a mismatch is malformed (the suite itself raises). With
+            ;; :accept-suites the proof selects from an allowlist, and anything
+            ;; outside it is a verification failure rather than a crash -- one
+            ;; unknown suite in a batch must not stop the batch.
+            allow (cond
+                    (map? accept-suites) accept-suites
+                    (coll? accept-suites) (into {} (map (juxt :cryptosuite identity))
+                                               accept-suites)
+                    :else nil)
+            named (get proof "cryptosuite")
+            ;; :accept-suites is opt-in. Without it the long-standing default
+            ;; applies unchanged, because removing it would break every existing
+            ;; caller -- and a compatibility default is a different thing from
+            ;; letting a proof pick its own verifier.
+            suite (cond
+                    suite suite
+                    allow (get allow named)
+                    :else eddsa/suite)]
+        ;; No suite: either the allowlist excludes what the proof names, or the
+        ;; caller passed neither :suite nor :accept-suites.
+        (if (nil? suite)
+          {:verified false
+           :reason :data-integrity/unacceptable-cryptosuite
+           :cryptosuite named
+           :accepted (vec (sort (keys (or allow {}))))}
         ;; §4.4 step 4
         (if-let [missing (some (fn [k] (when-not (get proof k) k))
                                ["type" "verificationMethod" "proofPurpose"])]
@@ -323,7 +386,7 @@
                    :proof-purpose purpose
                    :document unsecured}
                   {:verified false :reason :data-integrity/bad-signature
-                   :verification-method vm})))))))))
+                   :verification-method vm}))))))))))
 
 ;; ── credential / presentation wrappers ───────────────────────────────────────
 ;; The proofPurpose distinction is not decoration: `assertionMethod` means "the
