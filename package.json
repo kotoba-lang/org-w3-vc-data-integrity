@@ -1,9 +1,7 @@
 {
   "private": true,
-  "description": "npm dependency of the :cljs path only. multiformats.core reaches for @noble/hashes for SHA-256 on :cljs, so a fresh clone cannot run test/nbb_smoke.cljs without it \u2014 the cljs path previously appeared to work only because a sibling repo happened to have node_modules. The classpath is derived from deps.edn via `clojure -Spath` rather than written out as sibling paths: sibling checkouts exist in the west workspace but not in CI, which is exactly how the first version of this broke. Deriving it keeps deps.edn the single source of truth for the cljs path too, with no SHAs duplicated into the workflow.",
-  "dependencies": {
-    "@noble/hashes": "2.0.1"
-  },
+  "description": "No direct npm deps. io-multiformats uses org-nist-sha2 on :cljs (ADR-2608260200 tranche 2).",
+  "dependencies": {},
   "scripts": {
     "smoke": "nbb --classpath \"$(clojure -Spath | tr ':' '\\n' | grep -E '(^src$|gitlibs)' | tr '\\n' ':')\" test/nbb_smoke.cljs"
   }
