@@ -4,7 +4,7 @@
          :git/sha "ee06e8d51d16265bd366a4fe284ffa1dd617c34e"}
         io.github.kotoba-lang/org-ietf-ed25519
         {:git/url "https://github.com/kotoba-lang/org-ietf-ed25519.git"
-         :git/sha "c1ba8322a33b668da1311ca69a8cdde3c7981b52"}
+         :git/sha "c0b11c5ffe25d42f29b3f6a3d2d2317331e75336"}
         io.github.kotoba-lang/org-w3-did
         {:git/url "https://github.com/kotoba-lang/org-w3-did.git"
          :git/sha "c61e6c95515cd6b66ef19550876d40b7356fc6a7"}

@@ -10,7 +10,7 @@
    Reference: https://www.w3.org/TR/vc-di-eddsa/ sections 3.3.1-3.3.7"
   (:require [clojure.string :as str]
             [data-integrity.bytes :as b]
-            [ed25519.core :as ed]
+            [ed25519.sign :as ed]
             [jcs.core :as jcs]
             [multiformats.core :as mf]))
 
@@ -134,7 +134,7 @@
     (when-not (= 32 (b/byte-count seed))
       (fail! :data-integrity/bad-seed "an Ed25519 seed must be 32 bytes"
              {:length (b/byte-count seed)}))
-    (let [sig (ed/sign seed hash-bytes)]
+    (let [sig (b/ints->bytes (ed/sign (ed/secret-key (b/->ints seed)) (b/->ints hash-bytes)))]
       (when-not (= 64 (b/byte-count sig))
         (fail! :data-integrity/bad-signature-length
                "signer did not return a 64-byte Ed25519 signature"
@@ -151,7 +151,7 @@
       (fail! :data-integrity/bad-public-key "an Ed25519 public key must be 32 bytes"
              {:length (b/byte-count pub)}))
     (boolean
-     (try (ed/verify pub hash-bytes sig)
+     (try (ed/verify (b/->ints pub) (b/->ints hash-bytes) (b/->ints sig))
           (catch #?(:clj Exception :cljs :default) _ false)))))
 
 ;; ── the suite value ──────────────────────────────────────────────────────────
