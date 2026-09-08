@@ -45,7 +45,7 @@
   smoke test for the rest of the library still runs.
 
   Reference: https://www.w3.org/TR/vc-di-ecdsa/ §3.3.1-3.3.7"
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [data-integrity.bytes :as b]
             [jcs.core :as jcs]
             [multiformats.core :as mf])

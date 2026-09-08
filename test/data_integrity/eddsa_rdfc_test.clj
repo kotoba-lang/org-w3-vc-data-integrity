@@ -15,7 +15,7 @@
    wrong IRI and passed on it for want of a reference."
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [clojure.test :refer [deftest is testing]]
             [data-integrity.bytes :as b]
             [data-integrity.eddsa-rdfc :as rdfc]

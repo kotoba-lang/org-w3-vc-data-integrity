@@ -1,5 +1,5 @@
 (ns data-integrity.ecdsa-test
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [clojure.test :refer [deftest is testing]]
             [data-integrity.bytes :as b]
             [data-integrity.core :as di]
