@@ -33,7 +33,7 @@
 
    Reference: https://www.w3.org/TR/vc-data-integrity/ §4.2, §4.4
               https://www.w3.org/TR/vc-di-eddsa/ §3.3.1, §3.3.2"
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [data-integrity.bytes :as b]
             [data-integrity.ecdsa :as ecdsa]
             [data-integrity.eddsa :as eddsa]

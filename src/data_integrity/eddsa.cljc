@@ -8,7 +8,7 @@
    verify against nothing and fail in a way that looks like a key problem.
 
    Reference: https://www.w3.org/TR/vc-di-eddsa/ sections 3.3.1-3.3.7"
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [data-integrity.bytes :as b]
             [ed25519.sign :as ed]
             [jcs.core :as jcs]
