@@ -181,7 +181,7 @@ byte-array on `:clj` but a **vector of ints** on `:cljs`. A signature is over
 exact bytes, so a host that assembles them differently produces a credential the
 other host cannot verify — with nothing to say so.
 
-`test/nbb_smoke.cljs` therefore pins the *same* W3C Appendix B.3 vector the JVM
+`test/nbb_smoke.cljk` therefore pins the *same* W3C Appendix B.3 vector the JVM
 suite pins, including reproducing the exact `proofValue`. Measured 2026-07-30:
 both hosts produce it byte for byte.
 
