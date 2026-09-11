@@ -13,7 +13,7 @@
 ;; two ever disagree, one of them is wrong and this test names which.
 ;;
 ;;   npm install
-;;   nbb --classpath src:<sibling src dirs> test/nbb_smoke.cljs
+;;   nbb --classpath src:<sibling src dirs> test/nbb_smoke.cljk
 ;;
 ;; See package.json: `@noble/hashes` is required at runtime because
 ;; `multiformats.core` reaches for it on :cljs for SHA-256.
