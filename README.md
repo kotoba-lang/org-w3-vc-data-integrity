@@ -167,9 +167,9 @@ a byte-array on `:clj` and a **vector of ints** on `:cljs`. One normal form
 ## Test
 
 ```bash
-clojure -M:test          # JVM, release deps (git SHAs)
-clojure -M:dev:test      # JVM, sibling west checkouts
-clojure -M:lint
+kbb -M:test          # JVM, release deps (git SHAs)
+kbb -M:dev:test      # JVM, sibling west checkouts
+kbb -M:lint
 npm install && npm run smoke   # the :cljs branch
 ```
 
