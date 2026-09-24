@@ -13,7 +13,7 @@
    It has already earned that: the vector caught a real bug in property-scoped
    context handling, and a test of mine in `org-w3-json-ld-api` that had asserted a
    wrong IRI and passed on it for want of a reference."
-  (:require [clojure.data.json :as json]
+  (:require [kotoba.bytes :as kbytes] [kotoba.json :as json]
             [clojure.java.io :as io]
             [kotoba.lang.text :as str]
             [kotoba.test :refer [deftest is testing]]
@@ -51,22 +51,21 @@
 
 (deftest the-canonical-document-matches-w3c-byte-for-byte
   (let [v @test-vector
-        mine (String. (rdfc/transform (get v "unsecured") (get v "proof_options") (opts))
-                      "UTF-8")]
+        mine (kbytes/utf8-string (rdfc/transform (get v "unsecured") (get v "proof_options") (opts)))]
     (is (= (str/trim (get v "canonical_doc")) (str/trim mine))
         "canonical N-Quads of the credential")
     (testing "and so does its SHA-256, which is half of what gets signed"
-      (is (= (get v "doc_hash") (hex (mf/sha256 (.getBytes mine "UTF-8"))))))))
+      (is (= (get v "doc_hash") (hex (mf/sha256 (kbytes/utf8-bytes mine))))))))
 
 (deftest the-canonical-proof-configuration-matches-w3c-byte-for-byte
   (let [v @test-vector
-        mine (String. (rdfc/proof-configuration (get v "proof_options") (opts)) "UTF-8")]
+        mine (kbytes/utf8-string (rdfc/proof-configuration (get v "proof_options") (opts)))]
     (is (= (str/trim (get v "canonical_proof")) (str/trim mine)))
     (testing "the proof is a blank node, because a proof has no id — RDFC-1.0 names
               it _:c14n0, and that label is part of what gets hashed"
       (is (str/starts-with? (str/trim mine) "_:c14n0 ")))
     (testing "and its SHA-256 is the other half"
-      (is (= (get v "proof_hash") (hex (mf/sha256 (.getBytes mine "UTF-8"))))))))
+      (is (= (get v "proof_hash") (hex (mf/sha256 (kbytes/utf8-bytes mine))))))))
 
 (deftest hash-data-puts-the-proof-configuration-first
   (testing "getting this backwards fails identically to a wrong key, so it is pinned
