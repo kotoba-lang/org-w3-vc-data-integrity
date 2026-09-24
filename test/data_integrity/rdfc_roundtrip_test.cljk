@@ -12,7 +12,7 @@
   unwired above it, so the round trip below goes through `issue-credential` and
   `verify-credential` exactly as an application would, rather than calling the
   suite's members directly."
-  (:require [clojure.data.json :as json]
+  (:require [kotoba.json :as json]
             [clojure.java.io :as io]
             [kotoba.test :refer [deftest is testing]]
             [data-integrity.core :as di]

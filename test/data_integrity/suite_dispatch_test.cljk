@@ -12,7 +12,7 @@
   the document. Selecting from it unconditionally would let an attacker pick the
   weakest suite a verifier supports — a downgrade with no forgery required. That
   attempt is tested below, not merely described."
-  (:require [clojure.data.json :as json]
+  (:require [kotoba.json :as json]
             [clojure.java.io :as io]
             [kotoba.test :refer [deftest is testing]]
             [data-integrity.core :as di]
