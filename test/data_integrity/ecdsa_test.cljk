@@ -1,6 +1,6 @@
 (ns data-integrity.ecdsa-test
   (:require [kotoba.lang.text :as str]
-            [clojure.test :refer [deftest is testing]]
+            [kotoba.test :refer [deftest is testing]]
             [data-integrity.bytes :as b]
             [data-integrity.core :as di]
             [data-integrity.ecdsa :as ecdsa]
