@@ -16,7 +16,7 @@
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
             [kotoba.lang.text :as str]
-            [clojure.test :refer [deftest is testing]]
+            [kotoba.test :refer [deftest is testing]]
             [data-integrity.bytes :as b]
             [data-integrity.eddsa-rdfc :as rdfc]
             [multiformats.core :as mf]))

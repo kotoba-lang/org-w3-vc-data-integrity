@@ -14,7 +14,7 @@
   suite's members directly."
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
-            [clojure.test :refer [deftest is testing]]
+            [kotoba.test :refer [deftest is testing]]
             [data-integrity.core :as di]
             [data-integrity.eddsa :as eddsa]
             [data-integrity.eddsa-rdfc :as rdfc]
