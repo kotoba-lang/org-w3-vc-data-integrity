@@ -58,7 +58,7 @@
    down, which is the correct outcome. Do not paper over them by falling back to
    `eddsa-jcs-2022`: the two suites sign different things, and switching on failure
    would mean the proof no longer says what its `cryptosuite` field claims."
-  (:require [data-integrity.bytes :as b]
+  (:require [kotoba.bytes :as kbytes] [data-integrity.bytes :as b]
             [data-integrity.eddsa :as eddsa]
             [json-ld-api.core :as jld]
             [json-ld-api.to-rdf :as tordf]
@@ -72,7 +72,7 @@
   (throw (ex-info msg (assoc data :data-integrity/error code))))
 
 (defn- utf8-bytes [s]
-  #?(:clj (.getBytes ^String s "UTF-8")
+  #?(:clj (kbytes/utf8-bytes ^String s)
      :cljs (.encode (js/TextEncoder.) s)))
 
 (defn canonicalize-document

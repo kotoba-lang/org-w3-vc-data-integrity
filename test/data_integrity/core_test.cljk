@@ -1,5 +1,5 @@
 (ns data-integrity.core-test
-  (:require [kotoba.lang.text :as str]
+  (:require [kotoba.lang.error :as kerror] [kotoba.lang.text :as str]
             [kotoba.test :refer [deftest is testing]]
             [data-integrity.bytes :as b]
             [data-integrity.core :as di]
@@ -193,12 +193,12 @@
 
 (deftest expected-proof-purpose-is-mandatory
   (testing "omitting it would silently accept the wrong purpose, so it throws"
-    (is (thrown? clojure.lang.ExceptionInfo
+    (is (thrown? kerror/ExceptionInfo
                  (di/verify vector-secured-credential {})))
     (is (= :data-integrity/expected-proof-purpose-required
            (:data-integrity/error
             (ex-data (try (di/verify vector-secured-credential {})
-                          (catch clojure.lang.ExceptionInfo e e))))))))
+                          (catch kerror/ExceptionInfo e e))))))))
 
 ;; ═══════════════════════════════════════════════════════════════════════════
 ;; Presentations: challenge and domain
@@ -246,13 +246,13 @@
     (is (= :data-integrity/challenge-required
            (:data-integrity/error
             (ex-data (try (a-presentation {})
-                          (catch clojure.lang.ExceptionInfo e e)))))))
+                          (catch kerror/ExceptionInfo e e)))))))
   (testing "verifying without one would accept a replay"
     (let [vp (a-presentation {:challenge "c"})]
       (is (= :data-integrity/challenge-required
              (:data-integrity/error
               (ex-data (try (di/verify-presentation vp {})
-                            (catch clojure.lang.ExceptionInfo e e)))))))))
+                            (catch kerror/ExceptionInfo e e)))))))))
 
 ;; ═══════════════════════════════════════════════════════════════════════════
 ;; @context prefix rule (§3.3.2 step 4)
@@ -297,14 +297,14 @@
     (is (= :data-integrity/bad-multibase
            (:data-integrity/error
             (ex-data (try (eddsa/decode-proof-value (str "f" (subs vector-proof-value 1)))
-                          (catch clojure.lang.ExceptionInfo e e)))))))
+                          (catch kerror/ExceptionInfo e e)))))))
 
   (testing "a signature of the wrong length is refused"
     (is (= :data-integrity/bad-signature-length
            (:data-integrity/error
             (ex-data (try (eddsa/decode-proof-value (eddsa/encode-proof-value
                                                      (byte-array 32)))
-                          (catch clojure.lang.ExceptionInfo e e))))))))
+                          (catch kerror/ExceptionInfo e e))))))))
 
 (deftest keyword-and-string-keys-agree
   (testing "a keyword-keyed document produces the same signature as its string form"
@@ -325,7 +325,7 @@
     (is (= :data-integrity/duplicate-key
            (:data-integrity/error
             (ex-data (try (di/stringify {:a 1 "a" 2})
-                          (catch clojure.lang.ExceptionInfo e e))))))))
+                          (catch kerror/ExceptionInfo e e))))))))
 
 (deftest issue-input-discipline
   (let [opts {:seed presentation-seed
@@ -342,29 +342,29 @@
         (is (= :data-integrity/already-secured
                (:data-integrity/error
                 (ex-data (try (di/issue-credential secured opts)
-                              (catch clojure.lang.ExceptionInfo e e))))))))
+                              (catch kerror/ExceptionInfo e e))))))))
 
     (testing "`created` must be a real XSD dateTime and is never defaulted from a clock"
       (is (= :data-integrity/bad-created
              (:data-integrity/error
               (ex-data (try (di/issue-credential doc (dissoc opts :created))
-                            (catch clojure.lang.ExceptionInfo e e))))))
+                            (catch kerror/ExceptionInfo e e))))))
       (is (= :data-integrity/bad-created
              (:data-integrity/error
               (ex-data (try (di/issue-credential doc (assoc opts :created "yesterday"))
-                            (catch clojure.lang.ExceptionInfo e e)))))))
+                            (catch kerror/ExceptionInfo e e)))))))
 
     (testing "a signer is required"
       (is (= :data-integrity/no-signer
              (:data-integrity/error
               (ex-data (try (di/issue-credential doc (dissoc opts :seed))
-                            (catch clojure.lang.ExceptionInfo e e)))))))
+                            (catch kerror/ExceptionInfo e e)))))))
 
     (testing "a seed of the wrong length is refused"
       (is (= :data-integrity/bad-seed
              (:data-integrity/error
               (ex-data (try (di/issue-credential doc (assoc opts :seed (byte-array 16)))
-                            (catch clojure.lang.ExceptionInfo e e)))))))))
+                            (catch kerror/ExceptionInfo e e)))))))))
 
 (deftest injected-signer-keeps-key-material-out-of-this-library
   (testing ":sign lets an HSM/KMS produce the signature; the result must match
@@ -392,7 +392,7 @@
             e (try (di/verify (assoc-in vector-secured-credential
                                         ["proof" "verificationMethod"] vm)
                               {:expected-proof-purpose :any})
-                   (catch clojure.lang.ExceptionInfo ex ex))]
+                   (catch kerror/ExceptionInfo ex ex))]
         (is (= :data-integrity/resolver-required (:data-integrity/error (ex-data e))))
         (is (= "https://issuer.example/.well-known/did.json"
                (:url (ex-data e))))))
@@ -415,7 +415,7 @@
             to is refused rather than quietly resolved to the controller"
     (let [vm (str "did:key:" vector-public-multibase "#z6MkOTHER")
           e (try (di/default-resolve-key vm)
-                 (catch clojure.lang.ExceptionInfo ex ex))]
+                 (catch kerror/ExceptionInfo ex ex))]
       (is (= :data-integrity/verification-method-mismatch
              (:data-integrity/error (ex-data e)))))))
 
@@ -424,4 +424,4 @@
     (is (= :data-integrity/missing-proof
            (:data-integrity/error
             (ex-data (try (di/verify-credential vector-unsecured-credential)
-                          (catch clojure.lang.ExceptionInfo e e))))))))
+                          (catch kerror/ExceptionInfo e e))))))))

@@ -1,5 +1,5 @@
 (ns data-integrity.ecdsa-test
-  (:require [kotoba.lang.text :as str]
+  (:require [kotoba.lang.error :as kerror] [kotoba.lang.text :as str]
             [kotoba.test :refer [deftest is testing]]
             [data-integrity.bytes :as b]
             [data-integrity.core :as di]
@@ -71,7 +71,7 @@
            (:data-integrity/error
             (ex-data (try (ecdsa/did-key->public-key
                            "did:key:z6MkrJVnaZkeFzdQyMZu1cgjg7k1pZZ6pvBQ7XJPt4swbTQ2")
-                          (catch clojure.lang.ExceptionInfo e e))))))))
+                          (catch kerror/ExceptionInfo e e))))))))
 
 (deftest a-point-not-on-the-curve-is-refused
   (testing "an x with no square root would otherwise yield a point off the curve"
@@ -81,7 +81,7 @@
       (is (contains? #{:data-integrity/bad-public-key :data-integrity/wrong-curve}
                      (:data-integrity/error
                       (ex-data (try (ecdsa/did-key->public-key (str "did:key:" bad))
-                                    (catch clojure.lang.ExceptionInfo e e)))))))))
+                                    (catch kerror/ExceptionInfo e e)))))))))
 
 ;; ── the suite ────────────────────────────────────────────────────────────────
 
@@ -104,7 +104,7 @@
                (:data-integrity/error
                 (ex-data (try (ecdsa/encode-proof-value
                                (b/ints->bytes (into [0x30 0x44] (repeat 68 0))))
-                              (catch clojure.lang.ExceptionInfo e e))))))))))
+                              (catch kerror/ExceptionInfo e e))))))))))
 
 (deftest tampering-is-detected
   (doseq [[label tampered]
@@ -138,4 +138,4 @@
          (:data-integrity/error
           (ex-data (try (ecdsa/proof-configuration
                          {"type" "DataIntegrityProof" "cryptosuite" "eddsa-jcs-2022"})
-                        (catch clojure.lang.ExceptionInfo e e)))))))
+                        (catch kerror/ExceptionInfo e e)))))))
