@@ -12,8 +12,8 @@
   the document. Selecting from it unconditionally would let an attacker pick the
   weakest suite a verifier supports — a downgrade with no forgery required. That
   attempt is tested below, not merely described."
-  (:require [kotoba.json :as json]
-            [clojure.java.io :as io]
+  (:require [kotoba.lang.error :as kerror] [kotoba.json :as json]
+            [kotoba.io :as io]
             [kotoba.test :refer [deftest is testing]]
             [data-integrity.core :as di]
             [data-integrity.eddsa :as eddsa]
@@ -76,7 +76,7 @@
     (is (= :data-integrity/bad-cryptosuite
            (:data-integrity/error
             (ex-data (try (di/verify-credential @rdfc-cred {:suite eddsa/suite})
-                          (catch clojure.lang.ExceptionInfo e e))))))))
+                          (catch kerror/ExceptionInfo e e))))))))
 
 (deftest an-allowlist-may-be-a-map-or-a-collection
   (let [as-map {:accept-suites {"eddsa-rdfc-2022" rdfc/suite}
@@ -146,4 +146,4 @@
                                                 {:suite eddsa/suite
                                                  :accept-suites [rdfc/suite]
                                                  :suite-opts {:contexts @contexts}})
-                          (catch clojure.lang.ExceptionInfo e e))))))))
+                          (catch kerror/ExceptionInfo e e))))))))

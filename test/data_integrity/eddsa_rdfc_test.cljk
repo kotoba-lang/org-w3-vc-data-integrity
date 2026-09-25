@@ -13,8 +13,8 @@
    It has already earned that: the vector caught a real bug in property-scoped
    context handling, and a test of mine in `org-w3-json-ld-api` that had asserted a
    wrong IRI and passed on it for want of a reference."
-  (:require [kotoba.bytes :as kbytes] [kotoba.json :as json]
-            [clojure.java.io :as io]
+  (:require [kotoba.lang.error :as kerror] [kotoba.bytes :as kbytes] [kotoba.json :as json]
+            [kotoba.io :as io]
             [kotoba.lang.text :as str]
             [kotoba.test :refer [deftest is testing]]
             [data-integrity.bytes :as b]
@@ -137,7 +137,7 @@
             one is an error rather than a network call."
     (let [v @test-vector
           e (try (rdfc/transform (get v "unsecured") (get v "proof_options") {})
-                 (catch clojure.lang.ExceptionInfo ex ex))]
+                 (catch kerror/ExceptionInfo ex ex))]
       (is (= "context-not-provided" (:json-ld/error (ex-data e)))))))
 
 (deftest a-wrong-cryptosuite-or-type-is-refused
@@ -148,18 +148,18 @@
             (ex-data (try (rdfc/transform (get v "unsecured")
                                           (assoc po "cryptosuite" "eddsa-jcs-2022")
                                           (opts))
-                          (catch clojure.lang.ExceptionInfo e e))))))
+                          (catch kerror/ExceptionInfo e e))))))
     (is (= :data-integrity/bad-proof-type
            (:data-integrity/error
             (ex-data (try (rdfc/proof-configuration (assoc po "type" "Ed25519Signature2020")
                                                     (opts))
-                          (catch clojure.lang.ExceptionInfo e e))))))
+                          (catch kerror/ExceptionInfo e e))))))
     (testing "and a malformed `created` is refused, since it lands in the signed graph"
       (is (= :data-integrity/bad-created
              (:data-integrity/error
               (ex-data (try (rdfc/proof-configuration (assoc po "created" "yesterday")
                                                       (opts))
-                            (catch clojure.lang.ExceptionInfo e e)))))))))
+                            (catch kerror/ExceptionInfo e e)))))))))
 
 (deftest the-suite-value-declares-that-it-needs-contexts
   (testing "so a caller wiring suites generically can tell that this one takes an
